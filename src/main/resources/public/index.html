@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Mini Dropbox</title>
+      <style>
+         body {
+         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+         margin: 20px;
+         background-color: #f4f4f4;
+         color: #333;
+         text-align: center;
+         }
+         h1 {
+         color: #4285f4;
+         }
+         input[type="file"] {
+         display: none;
+         }
+         label {
+         background-color: #4285f4;
+         color: #fff;
+         padding: 10px;
+         border-radius: 5px;
+         cursor: pointer;
+         transition: background-color 0.3s ease;
+         }
+         label:hover {
+         background-color: #3367d6;
+         }
+         button {
+         background-color: #34a853;
+         color: #fff;
+         padding: 10px 20px;
+         border: none;
+         border-radius: 5px;
+         cursor: pointer;
+         transition: background-color 0.3s ease;
+         }
+         button:hover {
+         background-color: #2d8a4e;
+         }
+         #fileList {
+         list-style: none;
+         padding: 0;
+         margin-top: 20px;
+         }
+         .fileItem {
+         background-color: #fff;
+         padding: 10px;
+         margin-bottom: 5px;
+         border-radius: 5px;
+         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+         }
+      </style>
+   </head>
+   <body>
+      <h1>Mini Dropbox</h1>
+      <input type="file" id="fileInput" />
+      <label for="fileInput">Choose File</label>
+      <button onclick="uploadFile()">Upload</button>
+      <h2>File List</h2>
+      <ul id="fileList"></ul>
+      <script>
+         function uploadFile() {
+             const fileInput = document.getElementById('fileInput');
+             const file = fileInput.files[0];
+         
+             if (file) {
+                 const formData = new FormData();
+                 formData.append('file', file);
+         
+                 fetch('http://localhost:8081/files', {
+                     method: 'POST',
+                     body: formData
+                 })
+                     .then(response => {
+                         if (!response.ok) {
+                             throw new Error('Network response was not ok');
+                         }
+                         return response.json();
+                     })
+                     .then(data => {
+                         console.log('File uploaded successfully:', data);
+                         getFileList();
+                     })
+                     .catch(error => {
+                         console.error('Error uploading file:', error);
+                         return error.text();  
+                     })
+                     .then(responseText => {
+                         console.log('Response text:', responseText);
+                     });
+             } else {
+                 console.error('No file selected');
+             }
+         }
+         
+         function getFileList() {
+         // Make a GET request to the backend to retrieve the file list
+         fetch('http://localhost:8081/files')
+         .then(response => {
+             if (!response.ok) {
+                 throw new Error('Network response was not ok');
+             }
+             return response.text();  // Treat the response as text
+         })
+         .then(data => {
+             console.log('Raw Server Response:', data);
+         
+             const fileListElement = document.getElementById('fileList');
+             fileListElement.innerHTML = '';
+         
+             // Split the plain text response into an array (assuming one filename per line)
+             const filenames = data.split('\n');
+         
+             // Display each file in the list
+             filenames.forEach(filename => {
+                 const listItem = document.createElement('li');
+                 listItem.className = 'fileItem';
+                 listItem.textContent = filename;
+                 <!-- fileListElement.appendChild(listItem); --> 
+                 
+             });
+         })
+         .catch(error => console.error('Error getting file list:', error));
+         }
+         
+         getFileList();  // Get the initial file list when the page loads
+      </script>
+   </body>
+</html>
